@@ -1,0 +1,42 @@
+name: kite
+description: "Kite — a free, MIT-licensed Flutter admin dashboard template. Web, iOS, Android, macOS and Windows from one codebase."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.1
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+
+  # The UI layer, published from packages/kite_ui in this repo. A path
+  # dependency on purpose: this is a template, so the widgets should be
+  # editable source, not a black box. It is the same code as the published
+  # package — see docs/ARCHITECTURE.md.
+  kite_ui:
+    path: packages/kite_ui
+
+  # Routing: nested shells, redirect guard, typed routes, deep links.
+  go_router: ^18.0.0
+
+  # State. Codegen deliberately off — readable source matters in a template.
+  flutter_riverpod: ^3.0.0
+
+  intl: any
+  http: ^1.6.0
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

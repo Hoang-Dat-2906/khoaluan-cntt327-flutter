@@ -1,119 +1,77 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/apps/calendar_screen.dart';
-import '../../features/apps/chat_screen.dart';
-import '../../features/apps/inbox_screen.dart';
-import '../../features/apps/kanban_screen.dart';
+import '../../features/analysis/analysis_screen.dart';
 import '../../features/auth/auth_screens.dart';
-import '../../features/components/components_screen.dart';
-import '../../features/dashboard/dashboard_screen.dart';
-import '../../features/dashboard/project_dashboard_screen.dart';
-import '../../features/forms/forms_screen.dart';
-import '../../features/forms/wizard_screen.dart';
-import '../../features/resources/resource_detail_screen.dart';
-import '../../features/resources/resource_form_screen.dart';
-import '../../features/resources/resource_list_screen.dart';
-import '../../features/system/error_screen.dart';
-import '../../features/system/profile_screen.dart';
-import '../../features/system/settings_screen.dart';
-import '../../shared/layout/app_shell.dart';
+import '../../features/datasets/dataset_screens.dart';
+import '../../shared/layout/finai_shell.dart';
 import '../auth/session.dart';
-import 'routes.dart';
 
-/// Bridges Riverpod state into go_router's `refreshListenable`, so signing in
-/// or out re-evaluates the guard immediately rather than on the next
-/// navigation.
 class _SessionRefresh extends ChangeNotifier {
   _SessionRefresh(Ref ref) {
     ref.listen(sessionProvider, (_, _) => notifyListeners());
+    ref.listen(sessionBootstrapProvider, (_, _) => notifyListeners());
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _SessionRefresh(ref);
-  ref.onDispose(refresh.dispose);
-
-  return GoRouter(
-    initialLocation: R.dashboard,
+  final router = GoRouter(
+    initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
+      final bootstrap = ref.read(sessionBootstrapProvider);
+      if (bootstrap.isLoading || bootstrap.hasError) {
+        return state.uri.path == '/session' ? null : '/session';
+      }
       final signedIn = ref.read(sessionProvider) != null;
-      final onAuth = R.isAuthRoute(state.matchedLocation);
-      if (!signedIn && !onAuth) return R.signIn;
-      if (signedIn && onAuth) return R.dashboard;
+      if (!signedIn) return state.uri.path == '/sign-in' ? null : '/sign-in';
+      if (state.uri.path == '/sign-in' || state.uri.path == '/session') {
+        return '/';
+      }
       return null;
     },
-    errorBuilder: (context, state) => NotFoundScreen(location: state.uri.path),
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Không tìm thấy trang')),
+      body: Center(
+        child: TextButton(
+          onPressed: () => context.go('/'),
+          child: const Text('Về tổng quan'),
+        ),
+      ),
+    ),
     routes: [
-      GoRoute(path: R.signIn, builder: (_, _) => const SignInScreen()),
-      GoRoute(path: R.signUp, builder: (_, _) => const SignUpScreen()),
-      GoRoute(path: R.forgot, builder: (_, _) => const ForgotPasswordScreen()),
-      GoRoute(path: R.otp, builder: (_, _) => const OtpScreen()),
-      GoRoute(path: R.lock, builder: (_, _) => const LockScreen()),
-
-      // Everything below renders inside the persistent shell: the sidebar and
-      // top bar survive navigation instead of rebuilding on every route.
+      GoRoute(path: '/session', builder: (_, _) => const SessionGateScreen()),
+      GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
       ShellRoute(
-        builder: (context, state, child) =>
-            AppShell(location: state.matchedLocation, child: child),
+        builder: (_, state, child) =>
+            FinaiShell(location: state.uri.path, child: child),
         routes: [
+          GoRoute(path: '/', builder: (_, _) => const FinaiOverviewScreen()),
           GoRoute(
-            path: R.dashboard,
-            builder: (_, _) => const DashboardScreen(),
+            path: '/datasets',
+            builder: (_, _) => const DatasetListScreen(),
           ),
-          // One list / new / detail / edit set per resource. `new` is declared
-          // before `:id` so it is matched as a literal rather than an id.
-          for (final resource in const ['orders', 'customers', 'products'])
-            GoRoute(
-              path: '/$resource',
-              builder: (_, _) => ResourceListScreen(resource: resource),
-              routes: [
-                GoRoute(
-                  path: 'new',
-                  builder: (_, _) => ResourceFormScreen(resource: resource),
-                ),
-                GoRoute(
-                  path: ':id',
-                  builder: (_, state) => ResourceDetailScreen(
-                    resource: resource,
-                    id: state.pathParameters['id']!,
-                  ),
-                  routes: [
-                    GoRoute(
-                      path: 'edit',
-                      builder: (_, state) => ResourceFormScreen(
-                        resource: resource,
-                        id: state.pathParameters['id']!,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          GoRoute(path: R.inbox, builder: (_, _) => const InboxScreen()),
-          GoRoute(path: R.kanban, builder: (_, _) => const KanbanScreen()),
-          GoRoute(path: R.calendar, builder: (_, _) => const CalendarScreen()),
-          GoRoute(path: R.chat, builder: (_, _) => const ChatScreen()),
           GoRoute(
-            path: R.components,
-            builder: (_, _) => const ComponentsScreen(),
+            path: '/datasets/:id',
+            builder: (_, s) => DatasetDetailScreen(id: s.pathParameters['id']!),
           ),
-          GoRoute(path: R.forms, builder: (_, _) => const FormsScreen()),
-          GoRoute(path: R.wizard, builder: (_, _) => const WizardScreen()),
           GoRoute(
-            path: R.projects,
-            builder: (_, _) => const ProjectDashboardScreen(),
+            path: '/analysis/:id',
+            builder: (_, s) => AnalysisScreen(id: s.pathParameters['id']!),
           ),
-          GoRoute(path: R.settings, builder: (_, _) => const SettingsScreen()),
-          GoRoute(path: R.profile, builder: (_, _) => const ProfileScreen()),
           GoRoute(
-            path: R.serverError,
-            builder: (_, _) => const ServerErrorScreen(),
+            path: '/settings',
+            builder: (_, _) => const FinaiSettingsScreen(),
           ),
         ],
       ),
     ],
   );
+  ref.onDispose(() {
+    router.dispose();
+    refresh.dispose();
+  });
+  return router;
 });

@@ -1,0 +1,13 @@
+00:00 +0: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_live_test.dart
+00:00 +0: live FastAPI upload analysis chart and cleanup
+Shell: {
+Shell:   "login_and_user": "PASS",
+Shell:   "dataset_list": "PASS",
+Shell:   "upload_and_detail": "PASS",
+Shell:   "execution": "success",
+Shell:   "security": "passed",
+Shell:   "stdout_contains_expected_total_60": true,
+Shell:   "chart_bytes_received": true,
+Shell:   "cleanup_own_dataset": "PASS"
+Shell: }
+00:07 +1: All tests passed!

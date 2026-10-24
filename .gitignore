@@ -5,7 +5,7 @@ build/
 *.iml
 .idea/
 .vscode/
-pubspec.lock
+# FinAI is an application: keep pubspec.lock for reproducible builds.
 ios/Pods/
 ios/.symlinks/
 macos/Pods/

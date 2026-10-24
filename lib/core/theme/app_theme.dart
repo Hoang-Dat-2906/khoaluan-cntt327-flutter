@@ -28,7 +28,7 @@ enum KiteAccent {
 class ThemeState {
   const ThemeState({
     this.mode = ThemeMode.system,
-    this.accent = KiteAccent.slate,
+    this.accent = KiteAccent.blue,
   });
 
   final ThemeMode mode;

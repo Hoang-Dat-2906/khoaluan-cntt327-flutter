@@ -15,7 +15,7 @@ class KiteApp extends ConsumerWidget {
     final theme = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
     return ShadApp.router(
-      title: 'Kite',
+      title: 'FinAI Mobile',
       themeMode: theme.mode,
       theme: theme.data(Brightness.light),
       darkTheme: theme.data(Brightness.dark),

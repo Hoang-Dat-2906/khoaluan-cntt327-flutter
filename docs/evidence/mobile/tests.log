@@ -1,0 +1,57 @@
+00:00 +0: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart
+00:00 +0: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList paginates and reports the full total, not the page length
+00:00 +1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList a later page returns different rows
+00:00 +2: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList a page past the end is empty but still reports the total
+00:00 +3: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList search narrows results and shrinks the total
+00:00 +4: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList filters are applied exactly
+00:00 +5: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList sorting is numeric for numbers, not lexicographic
+00:00 +6: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: getList an unknown resource throws rather than returning empty
+00:00 +7: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: mutations create then getOne round-trips
+00:00 +8: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: mutations update merges and preserves the id
+00:00 +9: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/data_provider_test.dart: mutations delete removes the row
+00:00 +10: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart
+00:00 +10: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: data/count and schema JSON string parse
+00:00 +11: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: schema supports object and list
+00:00 +12: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: invalid or null schema warns instead of claiming clean
+00:00 +13: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: Unnamed headers require review
+00:00 +14: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: malformed data envelope is not an empty success
+00:00 +15: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: API origin prevents credentials and doubled path
+00:00 +16: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: download 404 never posts to AI
+00:00 +17: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: compatibility analysis uses bearer download and multipart fields
+00:00 +18: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: empty selection and comma in column fail before networking
+00:00 +19: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: late 401 does not invalidate a newer session
+00:00 +20: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: timeout is explicit and not automatically retried
+00:00 +21: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: response size is limited
+00:00 +22: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: result never treats passed security alone as success
+00:00 +23: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: invalid response field is rejected
+00:00 +24: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: bad Base64 fails explicitly
+00:00 +25: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_contract_test.dart: external chart URL rejected before bearer can leak
+00:00 +26: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_live_test.dart
+00:01 +26: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_live_test.dart: live FastAPI upload analysis chart and cleanup
+00:01 +26 ~1: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_widget_test.dart
+01:22 +26 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_widget_test.dart: 360dp login validates without overflow and no template auth shortcuts
+01:25 +27 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_widget_test.dart: failed execution is not presented as a success
+01:25 +28 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/finai_widget_test.dart: authenticated route shows real dataset and logout clears session
+01:27 +29 ~1: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart
+01:28 +29 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart: KiteFormat.money always shows two decimals
+01:28 +30 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart: KiteFormat.money groups thousands
+01:28 +31 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart: KiteFormat.money parses numeric strings
+01:28 +32 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart: KiteFormat.money renders an em dash for values that are not numbers
+01:28 +33 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/format_test.dart: KiteFormat.count groups thousands
+01:28 +34 ~1: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart
+01:32 +34 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: RestDataProvider sends paging, sort, search and filters as query parameters
+01:32 +35 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: RestDataProvider reads the total from X-Total-Count, not the page length
+01:32 +36 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: RestDataProvider unwraps an envelope when the body is not a bare list
+01:32 +37 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: RestDataProvider turns a 404 into a DataProviderException, not a crash
+01:32 +38 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: SupabaseDataProvider asks PostgREST for an exact count and a row range
+01:32 +39 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: SupabaseDataProvider builds an or=(...ilike...) clause for search
+01:32 +40 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/rest_provider_test.dart: SupabaseDataProvider getOne throws when the row set comes back empty
+01:32 +41 ~1: loading C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart
+01:34 +41 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: real contract login and safe token store then logout
+01:35 +42 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: wrong credentials HTTP 400 are not accepted
+01:35 +43 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: restore stored token obtains real user
+01:35 +44 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: restore 401 deletes expired credential
+01:35 +45 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: restore network failure keeps token for retry
+01:35 +46 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: late login cannot restore user after logout
+01:35 +47 ~1: C:/Users/Dat/Documents/GitHub/khoaluan-cntt327-flutter/test/session_test.dart: initials derive from authenticated user name
+01:35 +48 ~1: All tests passed!

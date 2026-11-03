@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +5,9 @@ import 'package:kite_ui/kite_ui.dart';
 
 import '../../core/auth/session.dart';
 import '../../core/network/api_client.dart';
+import '../../shared/widgets/finai_design.dart';
 import 'dataset.dart';
+import 'dataset_file_picker.dart';
 import 'dataset_repository.dart';
 
 class LoadFailure extends StatelessWidget {
@@ -22,7 +21,7 @@ class LoadFailure extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, size: 40),
+          Icon(Icons.cloud_off_rounded, size: 48, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 12),
           Text(
             error is ApiFailure
@@ -38,61 +37,116 @@ class LoadFailure extends StatelessWidget {
   );
 }
 
+
 class FinaiOverviewScreen extends ConsumerWidget {
   const FinaiOverviewScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(sessionProvider);
     final datasets = ref.watch(datasetsProvider);
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Text(
-          'Xin chào, ${user?.name ?? ""}',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Chọn dữ liệu doanh nghiệp và đặt câu hỏi bằng tiếng Việt. Phân tích được thực hiện trên máy chủ.',
-        ),
-        const SizedBox(height: 20),
-        KiteCard(
-          title: 'Kho dữ liệu',
-          child: datasets.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(12),
-              child: LinearProgressIndicator(),
-            ),
-            error: (e, _) => LoadFailure(
-              error: e,
-              retry: () => ref.invalidate(datasetsProvider),
-            ),
-            data: (page) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${page.count} tệp được phép truy cập',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Số liệu lấy từ API thật. Chọn một tệp để xem schema và bắt đầu phân tích.',
-                ),
-                const SizedBox(height: 12),
-                KiteButton(
-                  onPressed: () => context.go('/datasets'),
-                  child: const Text('Mở kho dữ liệu'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Lưu ý: mã Python chạy thành công không đảm bảo số liệu đã đúng nghiệp vụ. Hãy đối chiếu dữ liệu gốc và cách tổng hợp.',
-        ),
-      ],
-    );
+    return ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
+      Text('Xin chào, ${user?.name ?? ""}', style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 16),
+      FinaiHero(title: 'Hiểu dữ liệu.\nMở hướng đi mới.',
+        subtitle: 'Từ bảng dữ liệu đến góc nhìn hữu ích. Bắt đầu bằng một câu hỏi của bạn.',
+        action: FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: FinaiColors.blue),
+          onPressed: () => context.go('/datasets'), child: const Text('Mở kho dữ liệu'))),
+      const SizedBox(height: 24),
+      Text('Không gian dữ liệu', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      datasets.when(
+        loading: () => const FinaiPanel(child: LinearProgressIndicator()),
+        error: (e, _) => LoadFailure(error: e, retry: () => ref.invalidate(datasetsProvider)),
+        data: (page) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          FinaiPanel(child: Row(children: [
+            Container(padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(18)),
+              child: Icon(Icons.folder_copy_outlined, color: Theme.of(context).colorScheme.onSecondaryContainer)),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('${page.count} tệp được phép truy cập', style: Theme.of(context).textTheme.titleMedium),
+              Text('Sẵn trong không gian tài khoản', style: TextStyle(color: FinaiColors.muted(context))),
+            ])),
+          ])),
+          if (page.items.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text('Khám phá tệp của bạn', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ...page.items.take(2).map((d) => FinaiDatasetTile(dataset: d,
+              onTap: () => context.go('/datasets/${Uri.encodeComponent(d.id)}'))),
+          ] else const FinaiNotice('Kho dữ liệu còn trống. Tải một tệp CSV hoặc Excel để bắt đầu.'),
+        ]),
+      ),
+      const SizedBox(height: 24),
+      Text('Bạn muốn làm gì hôm nay?', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      _OverviewAction(title: 'Phân tích bằng câu hỏi', subtitle: 'Chọn tệp và hỏi bằng tiếng Việt.',
+        icon: Icons.auto_awesome_rounded, color: FinaiColors.blue, onTap: () => context.go('/datasets')),
+      _OverviewAction(title: 'Khám phá xu hướng', subtitle: 'Dự báo từ chuỗi dữ liệu theo thời gian.',
+        icon: Icons.insights_rounded, color: FinaiColors.violet, onTap: () => context.go('/forecast')),
+      const FinaiNotice('Kết quả là công cụ hỗ trợ. Hãy đối chiếu dữ liệu gốc và cách tổng hợp trước khi ra quyết định.'),
+    ]);
+  }
+}
+
+class _OverviewAction extends StatelessWidget {
+  const _OverviewAction({required this.title, required this.subtitle, required this.icon, required this.color, required this.onTap});
+  final String title, subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 12),
+    child: Material(color: FinaiColors.surface(context), borderRadius: BorderRadius.circular(22),
+      child: InkWell(borderRadius: BorderRadius.circular(22), onTap: onTap,
+        child: Padding(padding: const EdgeInsets.all(18), child: Row(children: [
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(15)), child: Icon(icon, color: FinaiColors.dark(context)
+                ? Theme.of(context).colorScheme.primary : color)),
+          const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: Theme.of(context).textTheme.titleSmall), const SizedBox(height: 4),
+            Text(subtitle, style: TextStyle(color: FinaiColors.muted(context))),
+          ])), const SizedBox(width: 8), const Icon(Icons.chevron_right_rounded, size: 20),
+        ]))),
+    ));
+}
+
+class FinaiDatasetTile extends StatelessWidget {
+  const FinaiDatasetTile({super.key, required this.dataset, required this.onTap, this.enabled = true});
+  final Dataset dataset;
+  final VoidCallback onTap;
+  final bool enabled;
+  @override
+  Widget build(BuildContext context) {
+    final d = dataset;
+    final color = Theme.of(context).colorScheme.secondary;
+    return Padding(padding: const EdgeInsets.only(bottom: 12),
+      child: Material(color: FinaiColors.surface(context), borderRadius: BorderRadius.circular(22),
+        child: InkWell(onTap: enabled ? onTap : null, borderRadius: BorderRadius.circular(22),
+          child: Padding(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(15)),
+                child: Icon(Icons.table_chart_outlined, color: color)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(d.filename, style: Theme.of(context).textTheme.titleSmall), const SizedBox(height: 5),
+                Text('${d.type.toUpperCase()} • v${d.version} • ${d.sizeBytes} byte',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: FinaiColors.muted(context))),
+              ])), const SizedBox(width: 6), const Icon(Icons.chevron_right_rounded, size: 20),
+            ]),
+            const SizedBox(height: 14),
+            Wrap(spacing: 8, runSpacing: 6, children: [
+              Text('${d.rows} dòng', style: Theme.of(context).textTheme.labelMedium),
+              Text('• ${d.columnsCount} cột', style: Theme.of(context).textTheme.labelMedium),
+              Text('• ${d.status}', style: Theme.of(context).textTheme.labelMedium),
+            ]),
+            const SizedBox(height: 8),
+            Text(d.storageMessage, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: d.fileBlocked ? Theme.of(context).colorScheme.error : FinaiColors.muted(context))),
+          ]))),
+      ));
   }
 }
 
@@ -115,33 +169,9 @@ class _DatasetListScreenState extends ConsumerState<DatasetListScreen> {
       _error = null;
     });
     try {
-      final picked = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['csv', 'xlsx', 'xls'],
-        withData: false,
-        withReadStream: true,
-      );
-      if (picked == null || !mounted || ref.read(sessionProvider) != user) {
-        return;
-      }
-      final file = picked.files.single;
-      if (file.size <= 0 || file.size > ApiClient.maxFileBytes) {
-        throw const ApiFailure('Chọn file có dữ liệu, tối đa 15 MB.');
-      }
-      final stream = file.readStream;
-      if (stream == null) {
-        throw const ApiFailure('Không đọc được file đã chọn.');
-      }
-      // Enforce limit while reading, not only trusting the reported size.
-      final chunks = <int>[];
-      await for (final chunk in stream) {
-        if (chunks.length + chunk.length > ApiClient.maxFileBytes) {
-          throw const ApiFailure('File vượt 15 MB.');
-        }
-        chunks.addAll(chunk);
-      }
-      if (!mounted || ref.read(sessionProvider) != user) return;
-      final dataset = await repo.upload(file.name, Uint8List.fromList(chunks));
+      final file = await ref.read(datasetFilePickerProvider).pick();
+      if (file == null || !mounted || ref.read(sessionProvider) != user) return;
+      final dataset = await repo.upload(file.name, file.bytes);
       if (!mounted || ref.read(sessionProvider) != user) return;
       ref.invalidate(datasetsProvider);
       _more.clear();
@@ -177,9 +207,13 @@ class _DatasetListScreenState extends ConsumerState<DatasetListScreen> {
         });
       }
     } on ApiFailure catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted && ref.read(sessionProvider) == user) {
+        setState(() => _error = e.message);
+      }
     } catch (_) {
-      if (mounted) setState(() => _error = 'Chưa tải được trang tiếp theo.');
+      if (mounted && ref.read(sessionProvider) == user) {
+        setState(() => _error = 'Chưa tải được trang tiếp theo.');
+      }
     } finally {
       if (mounted) setState(() => _moreBusy = false);
     }
@@ -195,18 +229,15 @@ class _DatasetListScreenState extends ConsumerState<DatasetListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Kho dữ liệu',
-                style: Theme.of(context).textTheme.headlineSmall,
+              const FinaiHeading(title: 'Kho dữ liệu', subtitle: 'Tất cả tệp của bạn, trong một không gian.', icon: Icons.folder_copy_outlined),
+              FilledButton.icon(
+                onPressed: _uploading ? null : _upload,
+                icon: const Icon(Icons.cloud_upload_outlined),
+                label: Text(_uploading ? 'Đang tải tệp…' : 'Tải CSV / Excel lên kho'),
               ),
-              const SizedBox(height: 8),
-              KiteButton(
-                enabled: !_uploading,
-                onPressed: _upload,
-                child: Text(
-                  _uploading ? 'Đang tải tệp…' : 'Tải CSV / Excel lên kho',
-                ),
-              ),
+              const SizedBox(height: 6),
+              Text('CSV, XLSX hoặc XLS • Tối đa 15 MB', textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: FinaiColors.muted(context))),
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -240,7 +271,9 @@ class _DatasetListScreenState extends ConsumerState<DatasetListScreen> {
                   padding: const EdgeInsets.all(16),
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    Text('${data.count} tệp • đang hiển thị ${all.length}'),
+                    Text('${data.count} tệp • đang hiển thị ${all.length}',
+                        style: TextStyle(color: FinaiColors.muted(context))),
+                    const SizedBox(height: 12),
                     if (all.isEmpty)
                       const Padding(
                         padding: EdgeInsets.all(24),
@@ -248,25 +281,8 @@ class _DatasetListScreenState extends ConsumerState<DatasetListScreen> {
                           'Chưa có dữ liệu. Hãy tải tệp mới lên kho.',
                         ),
                       ),
-                    ...all.map(
-                      (d) => Card(
-                        child: ListTile(
-                          isThreeLine: true,
-                          leading: const Icon(Icons.description_outlined),
-                          title: Text(
-                            d.filename,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            '${d.type.toUpperCase()} • v${d.version} • ${d.rows} dòng / ${d.columnsCount} cột\n${d.sizeBytes} byte • ${d.status}',
-                          ),
-                          onTap: () => context.go(
-                            '/datasets/${Uri.encodeComponent(d.id)}',
-                          ),
-                        ),
-                      ),
-                    ),
+                    ...all.map((d) => FinaiDatasetTile(dataset: d,
+                      onTap: () => context.go('/datasets/${Uri.encodeComponent(d.id)}'))),
                     if (all.length < data.count)
                       TextButton(
                         onPressed: _moreBusy ? null : () => _next(all.length),
@@ -298,12 +314,15 @@ class DatasetDetailScreen extends ConsumerWidget {
         data: (d) => ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Text(d.filename, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              'Phiên bản ${d.version} • ${d.rows} dòng • ${d.columnsCount} cột\n${d.sizeBytes} byte • Trạng thái: ${d.status}',
-            ),
+            FinaiHeading(title: d.filename, subtitle: '${d.type.toUpperCase()} • Phiên bản ${d.version}', icon: Icons.table_chart_outlined),
+            FinaiMetrics(values: {'Số dòng': '${d.rows}', 'Số cột': '${d.columnsCount}',
+              'Dung lượng': '${d.sizeBytes} byte', 'Trạng thái': d.status}),
             const SizedBox(height: 12),
+            FinaiNotice(d.storageMessage, warning: d.fileBlocked),
+            TextButton(
+              onPressed: () => ref.invalidate(datasetDetailProvider(id)),
+              child: const Text('Kiểm tra lại dataset'),
+            ),
             const Text(
               'Thông tin schema/quality bên dưới được lưu tại lúc upload hoặc làm sạch; không phải kiểm chứng lại nội dung tệp.',
             ),
@@ -317,17 +336,27 @@ class DatasetDetailScreen extends ConsumerWidget {
               ),
             const SizedBox(height: 12),
             KiteButton(
-              enabled: d.status != 'error' && d.columns.isNotEmpty,
+              enabled: !d.fileBlocked && d.columns.isNotEmpty,
               onPressed: () =>
                   context.go('/analysis/${Uri.encodeComponent(d.id)}'),
-              child: const Text('Đặt câu hỏi phân tích'),
+              child: const Flexible(
+                child: Padding(padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text('Đặt câu hỏi phân tích', textAlign: TextAlign.center)),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: d.fileBlocked ? null : () =>
+                  context.go('/forecast/${Uri.encodeComponent(d.id)}'),
+              icon: const Icon(Icons.trending_up),
+              label: const Text('Dự báo chỉ tiêu'),
             ),
             const SizedBox(height: 20),
             Text('Các cột', style: Theme.of(context).textTheme.titleLarge),
             ...d.columns.map(
-              (c) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
+              (c) => Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: FinaiPanel(
+                  padding: const EdgeInsets.all(18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

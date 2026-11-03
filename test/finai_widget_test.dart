@@ -98,6 +98,7 @@ void main() {
       expect(find.text('0 tệp được phép truy cập'), findsOneWidget);
       await tester.tap(find.text('Cài đặt'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Đăng xuất'));
       await tester.tap(find.text('Đăng xuất'));
       await tester.pumpAndSettle();
       expect(find.text('Đăng nhập'), findsOneWidget);

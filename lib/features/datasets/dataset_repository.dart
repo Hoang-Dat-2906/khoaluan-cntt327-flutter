@@ -43,8 +43,13 @@ class DatasetRepository {
     String query,
     List<String> columns,
   ) async {
+    dataset.requireUsable();
     if (query.trim().isEmpty || columns.isEmpty) {
       throw const ApiFailure('Hãy nhập câu hỏi và chọn ít nhất một cột.');
+    }
+    final names = dataset.columns.map((c) => c['name']).toSet();
+    if (columns.any((c) => !names.contains(c))) {
+      throw const ApiFailure('Cột đã chọn không còn trong schema. Hãy tải lại dataset.');
     }
     if (columns.any((c) => c.contains(','))) {
       throw const ApiFailure(
@@ -61,7 +66,7 @@ class DatasetRepository {
       throw const ApiFailure('Định dạng dataset chưa được hỗ trợ.');
     }
     final stamp = api.generation;
-    // Compatibility mode, verified against the currently available OpenAPI.
+    // Compatibility mode: source contract /files/upload; no live check in this update.
     final bytes = await api.send(
       http.Request(
         'GET',

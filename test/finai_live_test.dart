@@ -94,6 +94,7 @@ void main() {
       }
     },
     skip:
+        env['FINAI_RUN_LIVE'] != '1' ||
         (env['FINAI_TEST_EMAIL'] ?? '').isEmpty ||
         (env['FINAI_TEST_PASSWORD'] ?? '').isEmpty,
   );

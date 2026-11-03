@@ -5,6 +5,7 @@ import 'package:kite_ui/kite_ui.dart';
 
 import '../../core/auth/session.dart';
 import '../../core/network/api_client.dart';
+import '../../shared/widgets/finai_design.dart';
 import '../datasets/dataset.dart';
 import '../datasets/dataset_repository.dart';
 import '../datasets/dataset_screens.dart';
@@ -41,12 +42,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   AnalysisResult? _result;
   String? _error;
   bool _busy = false;
+  bool _fileBlocked = false;
   int _request = 0;
   @override
   void didUpdateWidget(covariant AnalysisScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.id != widget.id) {
       _request++;
+      _fileBlocked = false;
       _selected = null;
       _result = null;
       _error = null;
@@ -84,7 +87,13 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
       }
     } on ApiFailure catch (e) {
       if (mounted && request == _request && ref.read(sessionProvider) == user) {
-        setState(() => _error = e.message);
+        setState(() {
+          _error = e.message;
+          if (['DATASET_001', 'DATASET_003', 'DATASET_006', 'DATASET_008']
+              .contains(e.code)) {
+            _fileBlocked = true;
+          }
+        });
       }
     } catch (_) {
       if (mounted && request == _request && ref.read(sessionProvider) == user) {
@@ -109,16 +118,22 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
         ),
         data: (d) {
           final names = d.columns.map((c) => c['name'] as String).toSet();
-          final selected = _selected ?? names;
+          final selected = _selected?.intersection(names) ?? names;
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Text(
-                'Phân tích dữ liệu',
-                style: Theme.of(context).textTheme.headlineSmall,
+              const FinaiHeading(title: 'Hỏi dữ liệu của bạn', subtitle: 'Một câu hỏi. Thêm một góc nhìn.', icon: Icons.auto_awesome_rounded),
+              FinaiPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(d.filename, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 6), Text(d.storageMessage, style: TextStyle(color: FinaiColors.muted(context))),
+              ])),
+              TextButton(
+                onPressed: _busy ? null : () {
+                  setState(() => _fileBlocked = false);
+                  ref.invalidate(datasetDetailProvider(widget.id));
+                },
+                child: const Text('Tải lại trạng thái dataset'),
               ),
-              const SizedBox(height: 8),
-              Text(d.filename),
               if (d.needsReview)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -128,6 +143,9 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                   ),
                 ),
               const SizedBox(height: 16),
+              FinaiSection(title: 'Phạm vi dữ liệu', step: '1',
+                subtitle: 'Đã chọn ${selected.length}/${names.length} cột. Giữ những cột liên quan đến câu hỏi.',
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Row(
                 children: [
                   const Expanded(child: Text('Chọn cột')),
@@ -154,7 +172,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                     .map(
                       (name) => FilterChip(
                         label: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 250),
+                          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width < 400 ? 170 : 220),
                           child: Text(name, overflow: TextOverflow.ellipsis),
                         ),
                         selected: selected.contains(name),
@@ -172,7 +190,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 16),
+              ])),
+              FinaiSection(title: 'Bạn muốn tìm hiểu điều gì?', step: '2',
+                subtitle: 'Mô tả rõ chỉ tiêu và thời gian bạn muốn xem.',
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               TextField(
                 controller: _query,
                 enabled: !_busy,
@@ -181,7 +202,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Câu hỏi tiếng Việt',
                   hintText: 'Bạn cần tìm hiểu gì từ dữ liệu?',
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 8),
@@ -189,6 +209,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                 onPressed: _busy ? null : () => _query.text = 'Hiển thị 5 dòng đầu, mô tả các cột và chỉ rõ dữ liệu thiếu. Chỉ dùng dữ liệu trong file, không tạo số liệu thay thế.',
                 child: const Text('Gợi ý: xem dữ liệu và các cột'),
               ),
+              ])),
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -199,11 +220,11 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                 ),
               const SizedBox(height: 12),
               KiteButton(
-                enabled: !_busy && d.status != 'error',
+                enabled: !_busy && !_fileBlocked && !d.fileBlocked && selected.isNotEmpty,
                 onPressed: () => _analyze(d, selected.toList()),
-                child: Text(
-                  _busy ? 'Đang phân tích trên máy chủ…' : 'Phân tích ngay',
-                ),
+                child: Flexible(child: Text(
+                  _busy ? 'Đang phân tích trên máy chủ…' : 'Phân tích ngay', textAlign: TextAlign.center,
+                )),
               ),
               if (_busy)
                 const Padding(
@@ -235,7 +256,7 @@ class AnalysisResultView extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text('Kết quả phân tích', style: Theme.of(context).textTheme.titleLarge),
+      const FinaiHeading(title: 'Kết quả phân tích', subtitle: 'Số liệu và biểu đồ từ yêu cầu của bạn.', icon: Icons.insights_rounded),
       const SizedBox(height: 8),
       Text('Câu hỏi: ${result.question}'),
       const SizedBox(height: 12),
@@ -250,9 +271,13 @@ class AnalysisResultView extends StatelessWidget {
                   : Icons.info_outline,
               size: 18,
             ),
-            label: Text(result.executionLabel),
+            backgroundColor: (result.successful ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.error).withValues(alpha: .1),
+            label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 215),
+              child: Text(result.executionLabel)),
           ),
-          Chip(label: Text(result.securityLabel)),
+          Chip(label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 240),
+            child: Text(result.securityLabel))),
         ],
       ),
       if (result.timeMs != null)
@@ -260,9 +285,7 @@ class AnalysisResultView extends StatelessWidget {
           'Thời gian thực thi trên máy chủ: ${result.timeMs!.toStringAsFixed(1)} ms',
         ),
       const SizedBox(height: 12),
-      const Text(
-        'Trạng thái thực thi không chứng minh số liệu đúng nghiệp vụ. Đối chiếu kỳ, đơn vị và dữ liệu nguồn.',
-      ),
+      const FinaiNotice('Trạng thái thực thi không chứng minh số liệu đúng nghiệp vụ. Đối chiếu kỳ, đơn vị và dữ liệu nguồn.'),
       if (!result.successful)
         const Padding(
           padding: EdgeInsets.only(top: 12),
@@ -272,11 +295,8 @@ class AnalysisResultView extends StatelessWidget {
           ),
         ),
       const SizedBox(height: 16),
-      SelectableText(
-        result.stdout.isEmpty
-            ? 'Máy chủ chưa trả kết quả số liệu.'
-            : safeTechnicalText(result.stdout),
-      ),
+      FinaiSection(title: 'Số liệu & diễn giải', child: FinaiMono(
+        result.stdout.isEmpty ? 'Máy chủ chưa trả kết quả số liệu.' : safeTechnicalText(result.stdout))),
       if (result.chart != null) ...[
         const SizedBox(height: 16),
         ResultChart(key: ValueKey(result.chart), result: result),
@@ -318,12 +338,8 @@ class AnalysisResultView extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.centerLeft,
-            child: SelectableText(
-              result.code.isEmpty
-                  ? 'Không có mã Python.'
-                  : safeTechnicalText(result.code, maxLength: 120000),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            ),
+            child: FinaiMono(result.code.isEmpty ? 'Không có mã Python.'
+                : safeTechnicalText(result.code, maxLength: 120000), technical: true),
           ),
         ],
       ),
@@ -361,9 +377,29 @@ class _ResultChartState extends ConsumerState<ResultChart> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Biểu đồ do máy chủ trả về • chụm hai ngón để phóng to'),
-          SizedBox(
-            height: 300,
+          const FinaiHeading(title: 'Biểu đồ', subtitle: 'Biểu đồ do máy chủ trả về • chụm hai ngón để phóng to', icon: Icons.bar_chart_rounded),
+          TextButton.icon(
+            icon: const Icon(Icons.open_in_full_rounded, size: 18),
+            label: const Text('Mở toàn màn hình'),
+            onPressed: () async {
+              await showDialog<void>(context: context, builder: (dialogContext) => Dialog.fullscreen(
+                child: Scaffold(
+                  appBar: AppBar(title: const Text('Biểu đồ'), leading: IconButton(
+                    tooltip: 'Đóng biểu đồ', icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.of(dialogContext).pop())),
+                  body: SafeArea(child: ColoredBox(color: Colors.white, child: SizedBox.expand(
+                    child: InteractiveViewer(minScale: .5, maxScale: 8,
+                      child: Center(child: Image.memory(snapshot.data!, fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => const Text('Nội dung trả về không phải ảnh hợp lệ.')))),
+                  ))),
+                ),
+              ));
+            },
+          ),
+          Container(
+            height: 320,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
             child: InteractiveViewer(
               minScale: 0.5,
               maxScale: 5,

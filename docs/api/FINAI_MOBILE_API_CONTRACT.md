@@ -1,3 +1,33 @@
+# Contract mobile MVC — đối chiếu source 25/10/2026
+
+Đối chiếu source, chưa kiểm thử runtime. Backend checkout KL có thể có thay đổi local chưa merge. Bản cũ 24/10 bên dưới giữ như lịch sử và không có hiệu lực nếu mâu thuẫn bảng mới.
+
+| Chức năng | Request và response hiện dùng |
+|---|---|
+| Login | POST /api/v1/login/access-token, URL encoded username/password; access_token |
+| User | GET /api/v1/users/me, Bearer; is_active/is_superuser |
+| Dataset | GET /api/v1/datasets/?skip=0&limit=100; data/count |
+| Detail/quality | GET /api/v1/datasets/{id}; /{id}/quality-report (mobile hiện dùng schema metadata từ detail) |
+| Upload | POST /api/v1/datasets/upload multipart file; description tùy chọn chưa đưa vào form mobile |
+| Download | GET /api/v1/datasets/{id}/download, Bearer, tối đa 15 MiB phía mobile |
+| Analysis | POST /api/v1/files/upload multipart file/query/scope_columns dấu phẩy; download có token trước POST |
+| Forecast | POST /api/v1/forecast/predict JSON dataset_id, target_column, date_column, horizon 1..12, model_type |
+| History | GET /api/v1/history/; /{id}; /stats, chưa tích hợp mobile |
+
+analysis/run và analysis-history là API đề xuất trong tài liệu cũ, chưa được include trong backend router hiện đọc. Không fallback POST do lỗi mạng/timeout/404. Forecast hiện có source thật, không tiếp tục đánh dấu là chưa có API.
+
+Dataset thêm file_available bool nullable khi server cũ không trả; storage_status available/missing/invalid_path/unavailable/unknown. Missing/error/processing hoặc file_available=false bị chặn phía client; unknown được ghi chưa xác nhận, server sẽ kiểm tra khi dùng. Không gửi đường dẫn server hoặc sửa file gốc.
+
+Lỗi JSON {code,message,detail}: client chỉ giữ code hợp lệ và thông điệp allowlist, không lộ message/detail raw. Error body tối đa 16 KiB; body hỏng/quá lớn dùng HTTP fallback. AUTH_001/400 sai đăng nhập; AUTH_008/403 token không hợp lệ; DATASET_001/404 thiếu bản ghi; DATASET_002/403 thiếu quyền; DATASET_003/404 thiếu file; DATASET_006/403 path không hợp lệ; DATASET_008/503 kho lưu trữ chưa truy cập. Chỉ 401 hoặc AUTH_008/403 xóa phiên. Không phải mọi 403 đều hết phiên.
+
+Forecast trả envelope status/dataset_name/execution_time_ms/data. data có target_column/model_type, metrics {mae,rmse,mape,r2}, forecast_table [{period,forecast_value,lower_bound,upper_bound}], historical_table [{period,actual_value,fitted_value}], chart_image Base64/data URI. Mobile yêu cầu bảng không rỗng, số hữu hạn, target/model/horizon khớp yêu cầu. Chỉ số thiếu/sai kiểu/không hữu hạn hiển thị Không xác định; dòng số liệu không hợp lệ là lỗi parser. Không tạo số hoặc ảnh thay thế.
+
+Metrics hiện tính trên train/fitted; MAPE loại actual=0 và all-zero trả 0; khoảng dự báo chưa kiểm định; nhãn tương lai thiên về tháng. Màn hình ghi đúng giới hạn, không gọi fitted là test prediction. Xem docs/BACKEND_DEPENDENCIES_FOR_MOBILE.md.
+
+Nguồn: backend/app/api/main.py, api/routes/datasets.py, files.py, forecast.py, history.py; dto/request/forecast.py; dto/response/dataset.py; exceptions/error_code.py; analytics/forecasting.py.
+
+## Contract lịch sử 24/10 (không áp dụng thay bảng mới)
+
 # Contract API FinAI Mobile
 
 Đối chiếu mã nguồn FastAPI và OpenAPI live tại localhost:8000 trong lượt triển khai mục V ngày 24/10/2026. API_BASE_URL là origin, không kèm /api/v1; ApiClient nối prefix một lần. Mọi endpoint bảo vệ gửi Authorization Bearer. Không lưu credential thật trong tài liệu.

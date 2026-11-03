@@ -4,6 +4,9 @@
 
 Nhóm tái sử dụng packages/kite_ui, theme controller, cấu trúc Riverpod/go_router và phần mã template không nằm trong navigation FinAI. Các màn hình orders/customers/products/inbox/board/calendar/chat cùng dashboard mock cũ không được đưa vào luồng runtime FinAI. Chúng có thể còn trong source để bảo toàn template và không được tính là nghiệp vụ khóa luận đã hoàn thành.
 
-Phần mới của nhóm: tên hiển thị FinAI Mobile; shell/navigation ba mục; đăng nhập FastAPI và secure token; bootstrap/guard phiên thật; ApiClient; model/service dataset; màn hình danh sách/detail/schema; form query và kết quả; adapter download/multipart; upload mobile; trạng thái bảo mật/thực thi riêng; test hợp đồng và test UI; tài liệu tích hợp.
+Phần mới của nhóm: tên hiển thị FinAI Mobile; shell/navigation (thêm mục Dự báo ngày25/10); đăng nhập FastAPI và secure token; bootstrap/guard phiên thật; ApiClient; model/service dataset; màn hình danh sách/detail/schema; form query và kết quả; adapter download/multipart; upload mobile; trạng thái bảo mật/thực thi riêng; test hợp đồng và test UI; tài liệu tích hợp.
 
 Tên package Dart kite và applicationId com.colorlib.kite hiện chưa đổi để tránh migration ngoài phạm vi. Nếu phát hành chính thức cần chọn applicationId riêng, icon phát hành và chứng thư ký. Không nhận toàn bộ template là sản phẩm do nhóm viết mới. Chưa có ảnh trước tùy biến được chụp trong lượt này; nếu không có bằng chứng lịch sử thì không tạo ảnh giả thay thế.
+
+
+Cập nhật25/10/2026: nhóm thêm module forecast(model/repository/UI), parser mã lỗiMVC và storage guards; tiếp tục dùng Riverpod/go_router/http, theme và kite_ui. Chưa chạy/test/build bản cập nhật này. Không nhận thuật toán dự báo/sandbox backend là code Flutter.

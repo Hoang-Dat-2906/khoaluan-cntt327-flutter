@@ -106,7 +106,7 @@ class SessionController extends Notifier<SessionUser?> {
       state = user;
     } on ApiFailure catch (e) {
       if (!_current(version)) return;
-      if (e.status == 401 || e.status == 403) {
+      if (e.invalidSession) {
         await signOut();
         return;
       }

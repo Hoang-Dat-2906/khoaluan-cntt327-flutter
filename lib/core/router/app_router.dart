@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/analysis/analysis_screen.dart';
 import '../../features/auth/auth_screens.dart';
 import '../../features/datasets/dataset_screens.dart';
+import '../../features/forecast/forecast_screen.dart';
+import '../../features/history/history_screen.dart';
 import '../../shared/layout/finai_shell.dart';
 import '../auth/session.dart';
 
@@ -49,6 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             FinaiShell(location: state.uri.path, child: child),
         routes: [
           GoRoute(path: '/', builder: (_, _) => const FinaiOverviewScreen()),
+          GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
           GoRoute(
             path: '/datasets',
             builder: (_, _) => const DatasetListScreen(),
@@ -60,6 +63,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/analysis/:id',
             builder: (_, s) => AnalysisScreen(id: s.pathParameters['id']!),
+          ),
+          GoRoute(path: '/forecast', builder: (_, _) => const ForecastPickerScreen()),
+          GoRoute(
+            path: '/forecast/:id',
+            builder: (_, s) => ForecastScreen(id: s.pathParameters['id']!),
           ),
           GoRoute(
             path: '/settings',

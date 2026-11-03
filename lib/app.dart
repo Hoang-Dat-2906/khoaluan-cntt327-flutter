@@ -6,6 +6,7 @@ import 'core/l10n/locale_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/widgets/finai_design.dart';
 
 class KiteApp extends ConsumerWidget {
   const KiteApp({super.key});
@@ -23,6 +24,10 @@ class KiteApp extends ConsumerWidget {
       supportedLocales: L.supportedLocales,
       localizationsDelegates: L.localizationsDelegates,
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) => Theme(
+        data: FinaiColors.theme(Theme.of(context).brightness),
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

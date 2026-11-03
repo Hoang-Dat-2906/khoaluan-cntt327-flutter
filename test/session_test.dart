@@ -136,4 +136,18 @@ void main() {
   test('initials derive from authenticated user name', () {
     expect(SessionUser.fromJson(fixtureUser).initials, 'TU');
   });
+  test('restore AUTH_008 403 deletes invalid access token', () async {
+    setup((_) async => http.Response('{"code":"AUTH_008"}', 403));
+    store.token = 'expired';
+    await container.read(sessionBootstrapProvider.future);
+    expect(store.token, isNull);
+    expect(container.read(sessionProvider), isNull);
+  });
+  test('restore non-token 403 preserves credential and reports failure', () async {
+    setup((_) async => http.Response('{"code":"AUTH_006"}', 403));
+    store.token = 'synthetic-token';
+    await expectLater(container.read(sessionBootstrapProvider.future), throwsA(isA<ApiFailure>()));
+    expect(store.token, 'synthetic-token');
+  });
+
 }

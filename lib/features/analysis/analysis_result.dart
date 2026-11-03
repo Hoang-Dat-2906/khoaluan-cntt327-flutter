@@ -24,7 +24,7 @@ class AnalysisResult {
       ? 'Thực thi thành công'
       : switch (execution) {
           'error' => 'Thực thi thất bại',
-          'idle' => 'Chưa thực thi',
+          'idle' => 'Chưa thực thi/không có kết quả phân tích',
           'success' => 'Trạng thái mâu thuẫn — cần kiểm tra',
           _ => 'Chưa xác định trạng thái thực thi',
         };

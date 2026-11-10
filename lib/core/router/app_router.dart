@@ -50,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state, child) =>
             FinaiShell(location: state.uri.path, child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const FinaiOverviewScreen()),
+          GoRoute(path: '/', builder: (_, _) => const AnalysisScreen()),
           GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
           GoRoute(
             path: '/datasets',
@@ -64,7 +64,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/analysis/:id',
             builder: (_, s) => AnalysisScreen(id: s.pathParameters['id']!),
           ),
-          GoRoute(path: '/forecast', builder: (_, _) => const ForecastPickerScreen()),
+          GoRoute(
+            path: '/forecast',
+            builder: (_, _) => const ForecastPickerScreen(),
+          ),
           GoRoute(
             path: '/forecast/:id',
             builder: (_, s) => ForecastScreen(id: s.pathParameters['id']!),

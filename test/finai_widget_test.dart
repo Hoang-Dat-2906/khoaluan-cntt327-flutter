@@ -95,7 +95,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('0 tệp được phép truy cập'), findsOneWidget);
+      expect(find.text('Trợ lý phân tích'), findsOneWidget);
+      expect(find.text('Tải tệp lên Kho dữ liệu'), findsOneWidget);
       await tester.tap(find.text('Cài đặt'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Đăng xuất'));

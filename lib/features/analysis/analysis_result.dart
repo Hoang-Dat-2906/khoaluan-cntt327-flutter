@@ -14,10 +14,19 @@ class AnalysisResult {
     required this.error,
     required this.chart,
     this.timeMs,
+    this.summary = '',
+    this.validation = '',
+    this.steps = const [],
+    this.scope = const [],
+    this.exportName,
   });
   final String datasetId, question, stdout, code, execution, security, error;
   final String? chart;
   final double? timeMs;
+  final String summary, validation;
+  final List<Map<String, dynamic>> steps;
+  final List<String> scope;
+  final String? exportName;
   bool get successful =>
       execution == 'success' && error.trim().isEmpty && security != 'blocked';
   String get executionLabel => successful
@@ -63,6 +72,19 @@ class AnalysisResult {
       error: text('execution_error'),
       chart: chart.isEmpty ? null : chart,
       timeMs: (duration as num?)?.toDouble(),
+      summary: text('summary', text('stdout')),
+      validation: text('validation_status'),
+      steps: (j['agent_steps'] is List ? j['agent_steps'] as List : const [])
+          .whereType<Map<String, dynamic>>()
+          .toList(),
+      scope:
+          (j['selected_scope'] is List ? j['selected_scope'] as List : const [])
+              .whereType<String>()
+              .toList(),
+      exportName: switch (j['export_file']) {
+        {'filename': final String name} => name,
+        _ => null,
+      },
     );
   }
   Uint8List? inlineChart() {

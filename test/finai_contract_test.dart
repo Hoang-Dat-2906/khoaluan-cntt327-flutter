@@ -112,7 +112,7 @@ void main() {
       expect(() => api.uri('datasets/'), throwsA(isA<ApiFailure>()));
     }
   });
-  test('download 404 never posts to AI', () async {
+  test('stored dataset 404 is not retried', () async {
     final methods = <String>[];
     final api = ApiClient(
       baseUrl: 'http://example.invalid',
@@ -127,46 +127,40 @@ void main() {
           .analyze(Dataset.fromJson(datasetJson()), 'test', ['date']),
       throwsA(isA<ApiFailure>().having((e) => e.status, 'status', 404)),
     );
-    expect(methods, ['GET']);
+    expect(methods, ['POST']);
   });
-  test(
-    'compatibility analysis uses bearer download and multipart fields',
-    () async {
-      final api = ApiClient(
-        baseUrl: 'http://example.invalid',
-        client: MockClient((r) async {
-          expect(r.headers['Authorization'], 'Bearer synthetic');
-          if (r.method == 'GET') {
-            expect(r.url.path, endsWith('/download'));
-            return http.Response('date,revenue\n1,10', 200);
-          }
-          expect(r.url.path, '/api/v1/files/upload');
-          expect(r.headers['content-type'], contains('multipart/form-data'));
-          expect(r.body, contains('name="scope_columns"'));
-          expect(r.body, contains('date,revenue'));
-          expect(r.body, contains('Câu hỏi'));
-          expect(r.body, contains('synthetic.csv'));
-          return http.Response(
-            jsonEncode({
-              'execution_status': 'success',
-              'security_status': 'passed',
-              'stdout': '10',
-            }),
-            200,
-          );
-        }),
-      )..setToken('synthetic');
-      addTearDown(api.close);
-      final result = await DatasetRepository(api).analyze(
-        Dataset.fromJson(datasetJson()),
-        'Câu hỏi',
-        ['date', 'revenue'],
-      );
-      expect(result.successful, isTrue);
-      expect(result.datasetId, 'synthetic-dataset');
-    },
-  );
-  test('empty selection and comma in column fail before networking', () async {
+  test('analysis sends authenticated dataset id without reuploading', () async {
+    final api = ApiClient(
+      baseUrl: 'http://example.invalid',
+      client: MockClient((r) async {
+        expect(r.headers['Authorization'], 'Bearer synthetic');
+        expect(r.method, 'POST');
+        expect(r.url.path, '/api/v1/files/analyze-dataset-conversational');
+        expect(r.headers['content-type'], contains('multipart/form-data'));
+        expect(r.body, contains('name="scope_columns"'));
+        expect(r.body, contains('date,revenue'));
+        expect(r.body, contains('Câu hỏi'));
+        expect(r.body, contains('name="dataset_id"'));
+        expect(r.body, contains('synthetic-dataset'));
+        expect(r.body, isNot(contains('filename=')));
+        return http.Response(
+          jsonEncode({
+            'execution_status': 'success',
+            'security_status': 'passed',
+            'stdout': '10',
+          }),
+          200,
+        );
+      }),
+    )..setToken('synthetic');
+    addTearDown(api.close);
+    final result = await DatasetRepository(
+      api,
+    ).analyze(Dataset.fromJson(datasetJson()), 'Câu hỏi', ['date', 'revenue']);
+    expect(result.successful, isTrue);
+    expect(result.datasetId, 'synthetic-dataset');
+  });
+  test('empty query and comma in column fail before networking', () async {
     var calls = 0;
     final api = ApiClient(
       baseUrl: 'http://example.invalid',
@@ -178,7 +172,7 @@ void main() {
     addTearDown(api.close);
     final repo = DatasetRepository(api);
     final data = Dataset.fromJson(datasetJson());
-    await expectLater(repo.analyze(data, 'q', []), throwsA(isA<ApiFailure>()));
+    await expectLater(repo.analyze(data, '', []), throwsA(isA<ApiFailure>()));
     await expectLater(
       repo.analyze(data, 'q', ['Sales, net']),
       throwsA(isA<ApiFailure>()),

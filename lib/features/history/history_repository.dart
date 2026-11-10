@@ -64,6 +64,16 @@ class HistoryRepository {
   Future<HistoryRecord> detail(String id) async => HistoryRecord(
     await api.jsonRequest('history/${Uri.encodeComponent(id)}'),
   );
+  Future<Map<String, dynamic>> stats() => api.jsonRequest('history/stats');
+  Future<Map<String, dynamic>> delete(String id) =>
+      api.jsonRequest('history/${Uri.encodeComponent(id)}', method: 'DELETE');
+  Future<Map<String, dynamic>> bulkDelete(List<String> ids) => api.jsonRequest(
+    'history/bulk-delete',
+    method: 'POST',
+    jsonBody: {'ids': ids},
+  );
+  Future<Map<String, dynamic>> clear() =>
+      api.jsonRequest('history/actions/clear-all', method: 'DELETE');
 }
 
 final historyRepositoryProvider = Provider<HistoryRepository>(

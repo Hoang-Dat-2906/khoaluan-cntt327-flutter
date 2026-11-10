@@ -9,8 +9,8 @@ class ApiFailure implements Exception {
   final String message;
   final int? status;
   final String? code;
-  bool get invalidSession => status == 401 ||
-      (status == 403 && code == 'AUTH_008');
+  bool get invalidSession =>
+      status == 401 || (status == 403 && code == 'AUTH_008');
 
   // Deliberately allowlist messages: provider detail may contain secrets/paths.
   factory ApiFailure.fromResponse(int status, List<int> body) {
@@ -18,7 +18,8 @@ class ApiFailure implements Exception {
     if (body.length <= 16384) {
       try {
         final object = jsonDecode(utf8.decode(body));
-        if (object is Map && object['code'] is String &&
+        if (object is Map &&
+            object['code'] is String &&
             RegExp(r'^[A-Z]+_[0-9]{3}$').hasMatch(object['code'] as String)) {
           code = object['code'] as String;
         }
@@ -29,6 +30,8 @@ class ApiFailure implements Exception {
     final known = <String, String>{
       'AUTH_001': 'Email hoặc mật khẩu không đúng.',
       'AUTH_003': 'Tài khoản đã bị khóa. Liên hệ quản trị viên.',
+      'AUTH_004': 'Mật khẩu hiện tại không đúng.',
+      'AUTH_005': 'Mật khẩu mới phải khác mật khẩu hiện tại.',
       'AUTH_008': 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.',
       'DATASET_001': 'Không tìm thấy dataset. Vui lòng tải lại danh sách.',
       'DATASET_002': 'Bạn không có quyền truy cập dataset này.',
@@ -40,6 +43,11 @@ class ApiFailure implements Exception {
       'ANALYSIS_001': 'Không đọc được dữ liệu. Kiểm tra định dạng tệp.',
       'ANALYSIS_002': 'Không thực hiện được phân tích. Kiểm tra cột, số kỳ và dữ liệu đầu vào.',
       'FILE_001': 'Chỉ hỗ trợ định dạng CSV, XLSX hoặc XLS.',
+      'USER_002': 'Email này đã được đăng ký.',
+      'USER_003': 'Email này đã được sử dụng.',
+      'HISTORY_001': 'Không tìm thấy bản ghi lịch sử.',
+      'HISTORY_002': 'Bạn không có quyền xem bản ghi lịch sử này.',
+      'HISTORY_003': 'Bạn không có quyền xóa bản ghi lịch sử này.',
     };
     final fallback = switch (status) {
       400 => 'Yêu cầu không hợp lệ hoặc thông tin đăng nhập không đúng.',
@@ -59,7 +67,7 @@ class ApiFailure implements Exception {
 
 class ApiClient {
   ApiClient({required String baseUrl, http.Client? client})
-    : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), ''),
+    : baseUrl = baseUrl.trim().replaceAll(RegExp(r'/+$'), ''),
       _client = client ?? http.Client();
   final String baseUrl;
   final http.Client _client;
@@ -75,6 +83,12 @@ class ApiClient {
   void close() => _client.close();
 
   Uri uri(String path) {
+    if (baseUrl.isEmpty) {
+      throw const ApiFailure(
+        'Chưa cấu hình máy chủ. Khởi chạy lại app với API_BASE_URL.',
+        code: 'CLIENT_API_ORIGIN',
+      );
+    }
     final origin = Uri.tryParse(baseUrl);
     if (origin == null ||
         !['http', 'https'].contains(origin.scheme) ||
@@ -84,7 +98,8 @@ class ApiClient {
         origin.hasQuery ||
         origin.hasFragment) {
       throw const ApiFailure(
-        'API_BASE_URL phải là địa chỉ máy chủ, không kèm /api/v1 hoặc thông tin đăng nhập.',
+        'Địa chỉ máy chủ không hợp lệ. API_BASE_URL chỉ gồm giao thức, máy chủ và cổng.',
+        code: 'CLIENT_API_ORIGIN',
       );
     }
     return Uri.parse('$baseUrl/api/v1/$path');
@@ -130,7 +145,8 @@ class ApiClient {
             throw const ApiFailure('Phiên làm việc đã thay đổi.');
           }
           final failure = ApiFailure.fromResponse(
-            response.statusCode, errorBytes.takeBytes(),
+            response.statusCode,
+            errorBytes.takeBytes(),
           );
           if (waiting && authenticated && failure.invalidSession) {
             onUnauthorized?.call(stamp);

@@ -50,7 +50,14 @@ final tokenStoreProvider = Provider<TokenStore>(
   (ref) => const SecureTokenStore(),
 );
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final api = ApiClient(baseUrl: const String.fromEnvironment('API_BASE_URL'));
+  const configured = String.fromEnvironment('API_BASE_URL');
+  final localAndroid =
+      kDebugMode && !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  final api = ApiClient(
+    baseUrl: configured.isEmpty && localAndroid
+        ? 'http://10.0.2.2:8000'
+        : configured,
+  );
   ref.onDispose(api.close);
   return api;
 });
@@ -160,5 +167,31 @@ class SessionController extends Notifier<SessionUser?> {
         'Đã thoát phiên hiện tại nhưng chưa xóa được token lưu trên thiết bị. Hãy thử đăng xuất lại.',
       );
     }
+  }
+
+  Future<void> updateProfile(String name, String email) async {
+    final revision = _revision;
+    final updated = SessionUser.fromJson(
+      await _api.jsonRequest(
+        'users/me',
+        method: 'PATCH',
+        jsonBody: {'full_name': name.trim(), 'email': email.trim()},
+      ),
+    );
+    if (_current(revision)) state = updated;
+  }
+
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    await _api.jsonRequest(
+      'users/me/password',
+      method: 'PATCH',
+      jsonBody: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
   }
 }

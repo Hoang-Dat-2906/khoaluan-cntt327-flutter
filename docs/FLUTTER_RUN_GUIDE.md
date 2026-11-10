@@ -136,6 +136,8 @@ App không lưu lịch sử phân tích lâu dài ở thiết bị; rời màn h
 2. Dừng phiên debug cũ bằng Shift+F5. Giữ emulator và backend chạy.
 3. Mở Run and Debug (Ctrl+Shift+D), chọn `FinAI (Android Emulator)` trong danh sách cấu hình.
 4. Chọn thiết bị Android emulator ở thanh trạng thái rồi bấm F5. Android dùng API_BASE_URL=http://10.0.2.2:8000; Windows/Chrome dùng http://localhost:8000.
+
+Nếu không truyền `API_BASE_URL`, bản debug Android mặc định trỏ về backend local qua `http://10.0.2.2:8000`. Với điện thoại thật, truyền IP LAN của máy chạy backend. Bản release cần URL cấu hình rõ ràng. Lỗi URL thiếu hoặc sai cần khởi chạy lại app với cấu hình đúng.
 5. Cần khởi chạy lại đầy đủ để áp dụng dart-define; hot reload và nút Thử lại trong app không cập nhật giá trị cấu hình biên dịch.
 
 Nếu vẫn báo URL không hợp lệ, kiểm tra đang chọn cấu hình FinAI của đúng thư mục Flutter; cấu hình workspace hoặc nút Run của Android Studio là luồng cấu hình riêng. Trong ảnh hỗ trợ, Android Studio chỉ đang hiển thị emulator.
